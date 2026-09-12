@@ -1,0 +1,62 @@
+name: Build LiquidGlass APK
+
+on:
+  push:
+    branches:
+      - build-liquidglass-apk
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout helper branch
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-36" \
+            "build-tools;36.0.0" \
+            "ndk;27.1.12297006" \
+            "cmake;3.22.1"
+
+      - name: Download LiquidGlass v0.8.2
+        run: |
+          curl -L --fail --retry 3 \
+            https://github.com/BuildItCode/LiquidGlass/archive/refs/tags/v0.8.2.zip \
+            -o /tmp/liquidglass.zip
+          unzip -q /tmp/liquidglass.zip -d "$GITHUB_WORKSPACE"
+          mv "$GITHUB_WORKSPACE/LiquidGlass-0.8.2" "$GITHUB_WORKSPACE/liquidglass"
+
+      - name: Build debug APK
+        working-directory: liquidglass
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon :app:assembleDebug
+
+      - name: Verify APK
+        run: |
+          ls -lh liquidglass/app/build/outputs/apk/debug/app-debug.apk
+          cp liquidglass/app/build/outputs/apk/debug/app-debug.apk LiquidGlass-0.8.2-debug.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LiquidGlass-0.8.2-APK
+          path: LiquidGlass-0.8.2-debug.apk
+          if-no-files-found: error
+          retention-days: 7
