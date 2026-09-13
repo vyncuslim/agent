@@ -4,6 +4,7 @@ import { z } from "zod";
 import { config } from "@/lib/config";
 import { vynalthSearch, vynalthSearchHealth } from "@/lib/search";
 import { supabaseSelect } from "@/lib/supabase";
+import { callAllowedRpc } from "@/lib/supabase-rpc";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,6 +13,8 @@ const filterSchema = z.object({
   column: z.string().min(1).max(80),
   value: z.string().max(500)
 });
+
+const rpcArgsSchema = z.record(z.string(), z.unknown()).default({});
 
 const handler = createMcpHandler(
   (server) => {
@@ -28,12 +31,14 @@ const handler = createMcpHandler(
           text: JSON.stringify({
             ok: true,
             service: "vynalth-mcp-gateway",
-            version: "2.0.0",
+            version: "2.1.0",
             transport: "streamable-http",
             capabilities: {
               webSearch: Boolean(config.vynalthSearchBaseUrl),
-              supabaseRead: Boolean(config.supabaseUrl && config.supabaseKey && config.allowedTables.size)
-            }
+              supabaseRead: Boolean(config.supabaseUrl && config.supabaseKey && config.allowedTables.size),
+              supabaseRpc: Boolean(config.supabaseUrl && config.supabaseKey && config.allowedRpcs.size)
+            },
+            allowedRpcs: [...config.allowedRpcs]
           })
         }]
       })
@@ -86,10 +91,26 @@ const handler = createMcpHandler(
         return { content: [{ type: "text", text: JSON.stringify(result) }] };
       }
     );
+
+    server.registerTool(
+      "supabase_rpc",
+      {
+        title: "Run Approved Supabase Business Action",
+        description: "Call only a Supabase RPC explicitly listed in SUPABASE_ALLOWED_RPCS. Use this for controlled business actions such as support tickets, feedback, or partnership inquiries.",
+        inputSchema: z.object({
+          name: z.string().min(1).max(80),
+          args: rpcArgsSchema
+        })
+      },
+      async ({ name, args }) => {
+        const result = await callAllowedRpc(name, args);
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
+    );
   },
   {
-    serverInfo: { name: "Vynalth AI MCP Gateway", version: "2.0.0" },
-    instructions: "Use Vynalth Search for public web research. Supabase access is allowlisted and read-only unless dedicated business actions are added later. Never claim a tool succeeded unless its returned result confirms success."
+    serverInfo: { name: "Vynalth AI MCP Gateway", version: "2.1.0" },
+    instructions: "Use Vynalth Search for public web research. Supabase reads and RPC actions are allowlisted. Never claim a tool succeeded unless its returned result confirms success. Never attempt arbitrary SQL or non-allowlisted database actions."
   }
 );
 
