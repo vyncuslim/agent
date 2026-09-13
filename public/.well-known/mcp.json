@@ -1,0 +1,16 @@
+{
+  "mcpVersion": "2026-07-28",
+  "serverInfo": {
+    "name": "Vynalth AI MCP Gateway",
+    "version": "2.0.0",
+    "description": "Secure MCP gateway for Vynalth AI Search and approved Supabase data access."
+  },
+  "transport": "streamable-http",
+  "endpoint": "https://mcp.vynalthai.com/api/mcp",
+  "authentication": {
+    "type": "bearer"
+  },
+  "capabilities": {
+    "tools": true
+  }
+}
