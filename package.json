@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.0.0",
+    "@supabase/supabase-js": "^2.57.0",
     "mcp-handler": "^2.1.0",
     "next": "^15.5.0",
     "react": "^19.1.0",
