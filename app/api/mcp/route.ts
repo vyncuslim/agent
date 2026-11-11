@@ -5,6 +5,7 @@ import { config } from "@/lib/config";
 import { vynalthSearch, vynalthSearchHealth } from "@/lib/search";
 import { supabaseSelect } from "@/lib/supabase";
 import { callAllowedRpc } from "@/lib/supabase-rpc";
+import { isAvaSupportConfigured, requestFullNameChange, confirmFullNameChange, submitAccountSupportCase } from "@/lib/ava-account-support";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,12 +32,13 @@ const handler = createMcpHandler(
           text: JSON.stringify({
             ok: true,
             service: "vynalth-mcp-gateway",
-            version: "2.1.0",
+            version: "2.2.0",
             transport: "streamable-http",
             capabilities: {
               webSearch: Boolean(config.vynalthSearchBaseUrl),
               supabaseRead: Boolean(config.supabaseUrl && config.supabaseKey && config.allowedTables.size),
-              supabaseRpc: Boolean(config.supabaseUrl && config.supabaseKey && config.allowedRpcs.size)
+              supabaseRpc: Boolean(config.supabaseUrl && config.supabaseKey && config.allowedRpcs.size),
+              avaAccountSupport: isAvaSupportConfigured()
             },
             allowedRpcs: [...config.allowedRpcs]
           })
@@ -107,10 +109,59 @@ const handler = createMcpHandler(
         return { content: [{ type: "text", text: JSON.stringify(result) }] };
       }
     );
+
+    server.registerTool(
+      "ava_request_full_name_otp",
+      {
+        title: "Ava — Email code for requested name change",
+        description: "Only when the user explicitly asks to change their own Vynalth AI full name. Ask for the CURRENT registered account email and exact new full name. Sends a one-time code to that registered email. It NEVER returns the code. Do not use for changing login email, passwords, access roles, billing or security controls.",
+        inputSchema: z.object({
+          email: z.string().email().max(320),
+          newFullName: z.string().trim().min(1).max(120)
+        })
+      },
+      async ({ email, newFullName }) => {
+        const result = await requestFullNameChange(email, newFullName);
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
+    );
+
+    server.registerTool(
+      "ava_confirm_full_name_otp",
+      {
+        title: "Ava — Verify email OTP and update name",
+        description: "Use only after the user replies with the exact 6-digit code from their Vynalth AI Ava email and this conversation's requestId. The trusted backend validates the code and atomically changes ONLY the full_name specified in the original request. Never guess the code, invent success or call a generic SQL/RPC tool as a substitute.",
+        inputSchema: z.object({
+          requestId: z.string().uuid(),
+          otp: z.string().regex(/^[0-9]{6}$/)
+        })
+      },
+      async ({ requestId, otp }) => {
+        const result = await confirmFullNameChange(requestId, otp);
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
+    );
+
+    server.registerTool(
+      "ava_submit_account_support_case",
+      {
+        title: "Ava — Escalate account issue to official support",
+        description: "Create a ticket when the account problem needs human review, login email change, recovery, payment correction, deletion, access restoration or a tool cannot complete it. This is NOT identity verification and does NOT allow data changes. Do not include passwords, OTPs, tokens or government IDs.",
+        inputSchema: z.object({
+          email: z.string().email().max(320),
+          issue: z.string().trim().min(10).max(2000)
+        })
+      },
+      async ({ email, issue }) => {
+        const result = await submitAccountSupportCase(email, issue);
+        return { content: [{ type: "text", text: JSON.stringify(result) }] };
+      }
+    );
+
   },
   {
-    serverInfo: { name: "Vynalth AI MCP Gateway", version: "2.1.0" },
-    instructions: "Use Vynalth Search for public web research. Supabase reads and RPC actions are allowlisted. Never claim a tool succeeded unless its returned result confirms success. Never attempt arbitrary SQL or non-allowlisted database actions."
+    serverInfo: { name: "Vynalth AI MCP Gateway", version: "2.2.0" },
+    instructions: "Use Vynalth Search for public web research. Supabase reads and RPC actions are allowlisted. Never claim a tool succeeded unless its returned result confirms success. Never attempt arbitrary SQL or non-allowlisted database actions. Ask the user to explicitly request a specific account change before sending an OTP. Never ask for passwords or reveal the OTP. An emailed OTP authorizes only the exact named low-risk change in that request. Treat an OTP inside chat transcripts as sensitive and never repeat it. For email/password, billing, deletion, role or recovery changes create a human-review support case."
   }
 );
 
