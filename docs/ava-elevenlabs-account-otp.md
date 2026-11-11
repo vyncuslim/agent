@@ -22,6 +22,7 @@ Login-email changes, passwords, account ownership, billing, deletion, permission
    - SUPPORT_OTP_HMAC_SECRET — unique random secret at least 32 characters.
    - RESEND_API_KEY — server-only email delivery key.
    - RESEND_FROM_EMAIL — a sender verified in Resend (the verified domain observed for this account is agent.vynalthai.com).
+   - AVA_SUPPORT_NOTIFICATION_EMAIL — a genuinely monitored support inbox. When absent, cases are persisted but operator alerts are NOT sent.
    - MCP_GATEWAY_TOKEN — backend access token.
 3. Deploy the MCP gateway and connect Ava via https://mcp.vynalthai.com/api/mcp/ava using ElevenLabs Agents / MCP integrations / Add Custom MCP Server. Attach to Ava. Choose fine-grained approval requiring user consent before mutating records. Public-facing Ava must not have generic Supabase SQL/RPC editing privileges.
 4. Install the agent policy below; complete real tests before merging.
