@@ -69,7 +69,7 @@ const handler = createMcpHandler((server) => {
 function authenticated(request: Request): boolean {
   const secret = process.env.AVA_MCP_GATEWAY_TOKEN ?? "";
   const header = request.headers.get("authorization") ?? "";
-  const supplied = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
+  // ElevenLabs custom MCP secret-token field may supply either a raw\n  // Authorization value or a Bearer-formatted value. Do not accept URLs.\n  const supplied = header.startsWith("Bearer ") ? header.slice(7).trim() : header.trim();
   if (!secret || !supplied) return false;
   const expected = Buffer.from(secret);
   const received = Buffer.from(supplied);
