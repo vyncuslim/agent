@@ -48,7 +48,7 @@ test('private SQL tables and restricted SECURITY DEFINER business actions', () =
   assert.ok(sql.includes('alter table ava_private.ava_account_otp enable row level security'));
   assert.ok(sql.includes('alter table ava_private.ava_support_cases enable row level security'));
   assert.ok(sql.includes("current_setting('request.jwt.claim.role', true)"));
-  assert.ok(sql.includes("and v_req.attempts >= 5"));
+  assert.ok(sql.includes("or v_req.attempts >= 5"));
   assert.ok(sql.includes("v_req.expires_at <= now()"));
   assert.ok(sql.includes("set consumed_at=now()"));
   assert.ok(sql.includes("where id=v_req.user_id and coalesce(is_blocked,false)=false"));
