@@ -149,9 +149,47 @@ export async function submitAccountSupportCase(email: string, issue: string) {
   if (!data) {
     return { created: false, message: "Unable to create a case right now. Please contact official support directly." };
   }
-  return {
-    created: true,
-    caseId: data as string,
-    message: "A support case was created for manual review. This does not confirm the email belongs to the user."
-  };
+  const caseId = data as string;
+  const inbox = process.env.AVA_SUPPORT_NOTIFICATION_EMAIL?.trim();
+  if (!inbox) {
+    return {
+      created: true,
+      caseId,
+      notification: "not_configured",
+      message: "Case saved for manual review. Automatic notification is not configured. This does not verify account ownership."
+    };
+  }
+
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + settings().resendKey,
+        "Content-Type": "application/json",
+        "Idempotency-Key": "ava-case-" + caseId
+      },
+      body: JSON.stringify({
+        from: settings().sender,
+        to: [inbox],
+        subject: "Vynalth AI Ava: New account support case",
+        text: [
+          "Ava account support case created.",
+          "Case ID: " + caseId,
+          "Review the ticket in the restricted Supabase support queue.",
+          "No OTP, account email, user message, token, or raw data is included in this notification."
+        ].join("\n")
+      }),
+      signal: AbortSignal.timeout(SUPPORT_TIMEOUT_MS)
+    });
+    if (!response.ok) throw new Error("Notification rejected");
+    return {
+      created: true, caseId, notification: "accepted_by_email_provider",
+      message: "Case saved and notification accepted by email provider. Human review is still pending and this does not verify account ownership."
+    };
+  } catch {
+    return {
+      created: true, caseId, notification: "failed",
+      message: "Case saved but operator notification failed. Human review must be checked manually."
+    };
+  }
 }
