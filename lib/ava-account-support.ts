@@ -113,7 +113,7 @@ export async function requestFullNameChange(email: string, fullName: string) {
     const { data: marked, error: markError } = await db.rpc("ava_mark_otp_sent", { p_id: requestId });
     if (markError || !marked) throw new Error("Failed to activate OTP");
   } catch {
-    await db.rpc("ava_cancel_otp", { p_id: requestId }).catch(() => undefined);
+    try { await db.rpc("ava_cancel_otp", { p_id: requestId }); } catch { /* Best-effort cancellation. */ }
     // Deliberately do not return email-provider or account-existence details.
     return genericMailReply(requestId);
   }
