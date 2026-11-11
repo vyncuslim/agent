@@ -17,6 +17,7 @@ Transport: Streamable HTTP
 - `web_search_status` — checks Vynalth AI Search health
 - `supabase_select` — controlled read access to allowlisted Supabase tables
 - `supabase_rpc` — calls an explicitly allowlisted, non-Ava business RPC
+- Dedicated Ava-only MCP endpoint: `https://mcp.vynalthai.com/api/mcp/ava` (uses its own `AVA_MCP_GATEWAY_TOKEN`; general agents cannot invoke account-edit tools)
 - `ava_request_full_name_otp` — requests email verification from Ava's conversation
 - `ava_confirm_full_name_otp` — verifies one-use OTP and atomically updates the original full-name request
 - `ava_submit_account_support_case` — creates an unverified case for human follow-up
@@ -62,7 +63,7 @@ Limits:
 - `MCP_MAX_SEARCH_RESULTS`
 - `MCP_MAX_DB_ROWS`
 
-For Ava account support, also set `SUPABASE_SUPPORT_SERVICE_ROLE_KEY`, `SUPPORT_OTP_HMAC_SECRET`, `RESEND_API_KEY`, and `RESEND_FROM_EMAIL` server-side only. Run the reviewed SQL migration. See [Ava integration and acceptance checklist](docs/ava-elevenlabs-account-otp.md). **This branch is a draft, not a verified live deployment.**
+For Ava account support, also set `AVA_MCP_GATEWAY_TOKEN`, `SUPABASE_SUPPORT_SERVICE_ROLE_KEY`, `SUPPORT_OTP_HMAC_SECRET`, `RESEND_API_KEY`, and `RESEND_FROM_EMAIL` server-side only. Run the reviewed SQL migration. See [Ava integration and acceptance checklist](docs/ava-elevenlabs-account-otp.md). **This branch is a draft, not a verified live deployment.**
 
 ## ElevenLabs
 
