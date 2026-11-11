@@ -18,11 +18,12 @@ Login-email changes, passwords, account ownership, billing, deletion, permission
 2. On the MCP backend (not public browser and not in the agent prompt) configure:
    - SUPABASE_URL — verified correct Supabase tenant.
    - SUPABASE_SUPPORT_SERVICE_ROLE_KEY — dedicated server-only service role key.
+   - AVA_MCP_GATEWAY_TOKEN — separate Ava-only bearer secret (never reuse MCP_GATEWAY_TOKEN).
    - SUPPORT_OTP_HMAC_SECRET — unique random secret at least 32 characters.
    - RESEND_API_KEY — server-only email delivery key.
-   - RESEND_FROM_EMAIL — a sender verified in Resend.
+   - RESEND_FROM_EMAIL — a sender verified in Resend (the verified domain observed for this account is agent.vynalthai.com).
    - MCP_GATEWAY_TOKEN — backend access token.
-3. Deploy the MCP gateway and connect Ava via https://mcp.vynalthai.com/api/mcp using ElevenLabs Agents / MCP integrations / Add Custom MCP Server. Attach to Ava. Choose fine-grained approval requiring user consent before mutating records. Public-facing Ava must not have generic Supabase SQL/RPC editing privileges.
+3. Deploy the MCP gateway and connect Ava via https://mcp.vynalthai.com/api/mcp/ava using ElevenLabs Agents / MCP integrations / Add Custom MCP Server. Attach to Ava. Choose fine-grained approval requiring user consent before mutating records. Public-facing Ava must not have generic Supabase SQL/RPC editing privileges.
 4. Install the agent policy below; complete real tests before merging.
 
 ## Ava system instructions (paste into ElevenLabs)
