@@ -15,6 +15,11 @@ export async function supabaseSelect(args: {
   filters?: Array<{ column: string; value: string }>;
 }) {
   const table = requireAllowedTable(args.table);
+  // Static denylist takes precedence over configuration allowlists: service-role
+  // reads of these user tables must never be accessible to an LLM agent.
+  if (table === "profiles" || table.startsWith("ava_")) {
+    throw new Error("Restricted account table; use purpose-built support tools.");
+  }
   let query = getClient()
     .from(table)
     .select(args.columns?.trim() || "*")
