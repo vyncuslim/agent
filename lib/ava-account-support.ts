@@ -150,6 +150,13 @@ export async function submitAccountSupportCase(email: string, issue: string) {
     return { created: false, message: "Unable to create a case right now. Please contact official support directly." };
   }
   const caseId = data as string;
+  // Classification is derived from fixed server-known prefixes only, never raw
+  // customer text in email notifications. The full case stays in private DB.
+  const category = issue.startsWith("[HUMAN HANDOFF]") ? "Human support"
+    : issue.startsWith("[PRODUCT BUG]") ? "Product bug"
+    : issue.startsWith("[FEATURE REQUEST]") ? "Feature request"
+    : issue.startsWith("[PARTNERSHIP INQUIRY]") ? "Partnership inquiry"
+    : "Account support";
   const inbox = process.env.AVA_SUPPORT_NOTIFICATION_EMAIL?.trim();
   if (!inbox) {
     return {
@@ -171,9 +178,10 @@ export async function submitAccountSupportCase(email: string, issue: string) {
       body: JSON.stringify({
         from: settings().sender,
         to: [inbox],
-        subject: "Vynalth AI Ava: New account support case",
+        subject: "Vynalth AI Ava: New " + category + " case",
         text: [
-          "Ava account support case created.",
+          "New Ava support case created.",
+          "Type: " + category,
           "Case ID: " + caseId,
           "Review the ticket in the restricted Supabase support queue.",
           "No OTP, account email, user message, token, or raw data is included in this notification."
