@@ -78,3 +78,32 @@ The three intake tools reuse the existing rate-limited `ava_create_support_case`
 Agent instruction addendum: Only use each tool after the user explicitly requests the corresponding action. Do not promise SLA, implementation, delivery, partnership acceptance or successful health checks of services other than Search. Never expose general-purpose database, E2B, admin or deployment tools through this public-facing endpoint.
 
 Preproduction gates: pass typechecking and contract tests; verify configuration and the MCP test connection; perform real isolated test-account cases and inspect database inserts + operator notifications; verify that no sensitive payload appears in logs. Existing OTP production gates remain unresolved. No automatic production rollout.
+
+
+## Human support handoff and operator notification (DRAFT / NOT LIVE)
+
+- `ava_request_human_support(email, issue, preferredContact)` creates a restricted
+  manual support case and returns its ID when successful.
+- Ava must plainly explain that filing a ticket is NOT live agent connection,
+  phone-call placement, scheduled callback, identity verification or a response SLA.
+- When the customer prefers phone contact, the operator must first validate and
+  arrange the callback using the submitted email; Ava must NOT ask customers to
+  call a personal mobile number and must NEVER publish the operator's number.
+- The private case queue is `ava_private.ava_support_cases`. Trusted
+  operators can review it via a privileged, secured Supabase workspace.
+- Set `AVA_SUPPORT_NOTIFICATION_EMAIL` in Vercel backend secrets to an actual
+  monitored inbox. On creation, Resend sends that inbox the ticket ID and a
+  fixed category label ONLY (no user email, phone, freeform issue or OTP).
+  `accepted_by_email_provider` does not prove final delivery or a human reply.
+- Set up your phone's Gmail/Resend inbox push notifications to learn about new
+  cases. Sending an SMS to a Malaysian number is **NOT implemented**: an SMS
+  provider and a private destination number would be needed, with abuse/rate
+  safeguards. Do not hardcode personal phone numbers in GitHub or public pages.
+- If the inbox is missing or email delivery fails, the tool still retains the
+  case ID and accurately reports `not_configured` or `failed`.
+- Existing case capacity limits still apply. Email fields do not prove identity.
+
+Release gates: run updated contract + build checks, set verified secrets, test
+real Resend operator notification, test no secrets/PII in alerts, and verify
+manual staff can access the private support queue. This is a stacked draft PR
+that must not be deployed to production before acceptance.
