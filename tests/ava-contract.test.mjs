@@ -11,9 +11,9 @@ const retention = file('supabase/migrations/20261111_ava_otp_retention.sql');
 const config = file('lib/config.ts');
 const select = file('lib/supabase.ts');
 
-test('Ava MCP exposes only its three purpose-scoped support tools', () => {
-  assert.equal((ava.match(/server\.registerTool\(/g) ?? []).length, 3);
-  for (const name of ['ava_request_full_name_otp', 'ava_confirm_full_name_otp', 'ava_submit_account_support_case']) {
+test('Ava MCP exposes eight purpose-scoped support tools', () => {
+  assert.equal((ava.match(/server\.registerTool\(/g) ?? []).length, 8);
+  for (const name of ['ava_request_full_name_otp', 'ava_confirm_full_name_otp', 'ava_submit_account_support_case', 'ava_get_official_product_links', 'ava_get_service_status', 'ava_submit_bug_report', 'ava_submit_feature_request', 'ava_submit_partnership_inquiry']) {
     assert.ok(ava.includes('"' + name + '"'));
   }
   for (const disallowed of ['supabase_select', 'supabase_rpc', 'web_search']) {
@@ -60,4 +60,16 @@ test('privacy retention, no automatic deletion of unresolved support tickets', (
   assert.ok(retention.includes('delete from ava_private.ava_account_otp'));
   assert.ok(retention.includes("interval '7 days'"));
   assert.ok(!retention.includes('delete from ava_private.ava_support_cases'));
+});
+
+test('additional public support tools are least-privilege', () => {
+  assert.ok(ava.includes('vynalthSearchHealth'));
+  assert.ok(ava.includes('otherServicesChecked: false'));
+  assert.ok(ava.includes('[PRODUCT BUG]'));
+  assert.ok(ava.includes('[FEATURE REQUEST]'));
+  assert.ok(ava.includes('[PARTNERSHIP INQUIRY]'));
+  assert.equal((ava.match(/submitAccountSupportCase\(/g) ?? []).length, 4);
+  for (const blocked of ['"supabase_rpc"', '"supabase_select"', '"execute_shell"', '"deploy"']) {
+    assert.ok(!ava.includes(blocked));
+  }
 });
