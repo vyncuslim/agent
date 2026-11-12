@@ -62,3 +62,19 @@ When the user explicitly asks to change their full name, request the CURRENT reg
 10. Manual ticket requires operator review and does not grant account access.
 
 Status: drafted in GitHub only. Database migration, real email, ElevenLabs attachment, tests, and production deployment NOT YET VERIFIED.
+
+
+## Phase 1 expansion — draft, not live (2026-11-12)
+
+Additional tools:
+- ava_get_official_product_links: curated product and public status-page links, not live statuses.
+- ava_get_service_status: checks ONLY Vynalth AI Search health; the response clearly marks other services unverified.
+- ava_submit_bug_report: manual support case with a [PRODUCT BUG] tag.
+- ava_submit_feature_request: manual support case with a [FEATURE REQUEST] tag.
+- ava_submit_partnership_inquiry: manual support case with a [PARTNERSHIP INQUIRY] tag.
+
+The three intake tools reuse the existing rate-limited `ava_create_support_case` RPC and restricted case table. They are NOT separate engineering, product or partnership queues; operations staff must manually classify cases. Supplying an email does not verify ownership. Never include passwords, other services' OTPs, API tokens, cookies, private messages, identity documents or payment details. Never claim a case was created unless created:true.
+
+Agent instruction addendum: Only use each tool after the user explicitly requests the corresponding action. Do not promise SLA, implementation, delivery, partnership acceptance or successful health checks of services other than Search. Never expose general-purpose database, E2B, admin or deployment tools through this public-facing endpoint.
+
+Preproduction gates: pass typechecking and contract tests; verify configuration and the MCP test connection; perform real isolated test-account cases and inspect database inserts + operator notifications; verify that no sensitive payload appears in logs. Existing OTP production gates remain unresolved. No automatic production rollout.
