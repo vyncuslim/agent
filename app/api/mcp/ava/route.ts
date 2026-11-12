@@ -172,8 +172,38 @@ const handler = createMcpHandler((server) => {
       }) }] };
     }
   );
+
+  server.registerTool(
+    "ava_request_human_support",
+    {
+      title: "Ava — Request human customer support",
+      description: "Create a human-review support case only when the customer asks for a person or needs an unsupported account action. Ask for contact email and a concise sanitized issue. For phone preference, a human must first verify and arrange a call privately by email; this tool does not place or schedule calls. Never expose an agent's personal number.",
+      inputSchema: z.object({
+        email: z.string().email().max(320),
+        issue: z.string().trim().min(10).max(900),
+        preferredContact: z.enum(["email", "phone"]).default("email")
+      })
+    },
+    async ({ email, issue, preferredContact }) => {
+      const result = await submitAccountSupportCase(
+        email,
+        "[HUMAN HANDOFF] Preferred contact: " + preferredContact +
+        (preferredContact === "phone" ? " (arrange privately after verifying by email)" : "") +
+        "\nIssue: " + issue
+      );
+      return { content: [{ type: "text", text: JSON.stringify({
+        ...result,
+        type: "human_handoff",
+        contactPreference: preferredContact,
+        message: result.created
+          ? "Human-review case saved. A callback is NOT booked and no human has joined the live chat. Human staff must verify the request and arrange contact."
+          : "Could not create the case. No human handoff was completed.",
+        operatorNotification: result.notification ?? "unknown"
+      }) }] };
+    }
+  );
 }, {
-  serverInfo: { name: "Vynalth AI Ava Account Support MCP", version: "1.1.0" },
+  serverInfo: { name: "Vynalth AI Ava Account Support MCP", version: "1.2.0" },
   instructions: "Ava is an AI support agent. The user may reply to Ava with the one-time code emailed for ONE explicitly requested, low-risk profile change. The trusted server validates it. Do NOT reveal or repeat codes, and never claim changes unless the tool confirms. Never use OTP alone for login email, password, MFA, permissions, account deletion or financial actions. Those require human review. Reports and inquiries enter a restricted manual queue; never promise resolution or acceptance."
 });
 
