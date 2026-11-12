@@ -33,6 +33,8 @@ export function requireAllowedTable(table: string): string {
 
 export function requireAllowedRpc(name: string): string {
   const safe = assertIdentifier(name, "RPC name");
+  // Ava verification/mutation RPCs must never be reachable through the generic RPC bridge.
+  if (safe.startsWith("ava_")) throw new Error("Restricted support RPC.");
   if (!config.allowedRpcs.has(safe)) throw new Error(`RPC '${safe}' is not allowed.`);
   return safe;
 }

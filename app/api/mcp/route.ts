@@ -31,7 +31,7 @@ const handler = createMcpHandler(
           text: JSON.stringify({
             ok: true,
             service: "vynalth-mcp-gateway",
-            version: "2.1.0",
+            version: "2.2.0",
             transport: "streamable-http",
             capabilities: {
               webSearch: Boolean(config.vynalthSearchBaseUrl),
@@ -107,10 +107,12 @@ const handler = createMcpHandler(
         return { content: [{ type: "text", text: JSON.stringify(result) }] };
       }
     );
+
+
   },
   {
-    serverInfo: { name: "Vynalth AI MCP Gateway", version: "2.1.0" },
-    instructions: "Use Vynalth Search for public web research. Supabase reads and RPC actions are allowlisted. Never claim a tool succeeded unless its returned result confirms success. Never attempt arbitrary SQL or non-allowlisted database actions."
+    serverInfo: { name: "Vynalth AI MCP Gateway", version: "2.2.0" },
+    instructions: "Use Vynalth Search for public web research. Supabase reads and RPC actions are allowlisted. Never claim a tool succeeded unless its returned result confirms success. Never attempt arbitrary SQL or non-allowlisted database actions. This generic gateway cannot perform Ava account modifications; use the isolated Ava-only MCP endpoint."
   }
 );
 
