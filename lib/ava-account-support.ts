@@ -18,6 +18,29 @@ function settings() {
   return { url, key, pepper, resendKey, sender };
 }
 
+/**
+ * Internal diagnostics for Vercel runtime logs only. Never include env values,
+ * credential lengths, user input, access tokens or OTPs in these diagnostics.
+ */
+export function avaConfigurationProblems(): string[] {
+  const required = [
+    "AVA_MCP_GATEWAY_TOKEN",
+    "SUPABASE_URL",
+    "SUPABASE_SUPPORT_SERVICE_ROLE_KEY",
+    "SUPPORT_OTP_HMAC_SECRET",
+    "RESEND_API_KEY",
+    "RESEND_FROM_EMAIL"
+  ] as const;
+  const problems: string[] = required
+    .filter((name) => !process.env[name]?.trim())
+    .map((name) => name + "_MISSING_OR_EMPTY");
+  const hmacSecret = process.env.SUPPORT_OTP_HMAC_SECRET?.trim() ?? "";
+  if (hmacSecret && hmacSecret.length < 32) {
+    problems.push("SUPPORT_OTP_HMAC_SECRET_TOO_SHORT");
+  }
+  return problems;
+}
+
 export function isAvaSupportConfigured(): boolean {
   try { settings(); return true; } catch { return false; }
 }
