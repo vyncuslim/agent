@@ -83,3 +83,14 @@ test('human handoff is manual and operator phone is not published', () => {
   assert.ok(!ava.includes('AVA_SUPPORT_NOTIFICATION_PHONE'));
   assert.ok(!service.includes('api.twilio.com'));
 });
+
+test('incomplete Ava configuration logs only validation codes and stays fail-closed', () => {
+  assert.ok(ava.includes('avaConfigurationProblems()'));
+  assert.ok(ava.includes('AVA_CONFIG_VALIDATION_FAILED'));
+  assert.ok(ava.includes('AVA_SUPPORT_NOT_CONFIGURED'));
+  assert.ok(ava.includes('status: 503'));
+  assert.ok(service.includes('SUPPORT_OTP_HMAC_SECRET_TOO_SHORT'));
+  assert.ok(service.includes('AVA_MCP_GATEWAY_TOKEN_MISSING_OR_EMPTY') === false);
+  assert.ok(!ava.includes('console.error(process.env'));
+  assert.ok(!ava.includes('console.log(process.env'));
+});
