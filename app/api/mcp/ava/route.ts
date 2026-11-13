@@ -4,6 +4,7 @@ import { z } from "zod";
 import { vynalthSearchHealth } from "@/lib/search";
 import {
   isAvaSupportConfigured,
+  avaConfigurationProblems,
   requestFullNameChange,
   confirmFullNameChange,
   submitAccountSupportCase
@@ -218,8 +219,18 @@ function authenticated(request: Request): boolean {
   return expected.length === received.length && timingSafeEqual(expected, received);
 }
 
+// Log once per runtime instance to avoid high-cardinality log flooding.
+let loggedIncompleteConfig = false;
+
 async function route(request: Request): Promise<Response> {
   if (!process.env.AVA_MCP_GATEWAY_TOKEN || !isAvaSupportConfigured()) {
+    if (!loggedIncompleteConfig) {
+      loggedIncompleteConfig = true;
+      // Log only static variable identifiers / validation codes, never secrets.
+      console.error("AVA_CONFIG_VALIDATION_FAILED", {
+        issues: avaConfigurationProblems()
+      });
+    }
     return Response.json({ error: "AVA_SUPPORT_NOT_CONFIGURED" }, {
       status: 503, headers: { "Cache-Control": "no-store" }
     });
